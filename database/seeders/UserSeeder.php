@@ -22,7 +22,7 @@ class UserSeeder extends Seeder
         DB::table('users')->truncate();
         $user = User::create([
             'name' => 'admin',
-            'email' => 'admin@zrix.com', 
+            'email' => 'admin@demo.com', 
             'password' => bcrypt('123456'),
             'user_name' => 'admin', 
         ]);
