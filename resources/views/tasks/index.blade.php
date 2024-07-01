@@ -1,0 +1,108 @@
+@extends('layouts.adminApp')
+@section('content')
+
+  <!-- Basic Bootstrap Table -->
+  <div class="card">
+    <h5 class="card-header">{{$title}}</h5>
+      <x-task-filter :writerList="$writerList" :sendUrl="$resetUrl=route('tasks.index')" :buyerList="$buyerList" />
+   
+    <div class="table-responsive text-nowrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>#</th>
+            @if(Auth()->user()->hasRole('admin'))
+            <th>Created By</th>
+            @endif
+            @if(Auth()->user()->hasRole(['admin', 'Buyer']))
+            <th>Assigned Writer</th>
+            @endif
+            <th>Title</th>
+            <th>WC</th>
+            <th>WW</th>
+            <th>Status</th>
+            <th>Priority</th>
+            <th>Created At</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody class="table-border-bottom-0">
+            @if($results->count() > 0)
+            @php($sl = ($results->perPage() * $results->currentPage()) - ($results->perPage() - 1))
+            @foreach ($results as $key => $result)
+                <tr>
+                    <td>{{$sl++}}</td>
+                    @if(Auth()->user()->hasRole('admin'))
+                    <td>{{ isset($result->user->user_name) ? strtoupper($result->user->user_name) :''}}</td>
+                    @endif
+                    @if(Auth()->user()->hasRole('admin') || Auth()->user()->hasRole('Buyer'))
+                    <td>{{ isset($result->writer->name) ? strtoupper($result->writer->name) :'' }}</td>
+                    @endif
+                    <td><a  href="{{ route('tasks.show',$result->id) }}"> {!! \Illuminate\Support\Str::limit($result->title, 50,'....')  !!} </a> </td>
+                    <td>{{ $result->word_count }}</td>
+                    <td>{{ isset($result->article->article)? str_word_count(strip_tags(str_replace("&nbsp;","",$result->article->article))) : 0 }}</td>
+                    <td>
+                    @if($result->status == 0)
+                      <span class="badge bg-label-warning me-1">Pending</span>
+                      @elseif($result->status == 1)
+                       <span class="badge bg-label-success me-1">Accept</span>
+                       @elseif($result->status == 2)
+                        <span class="badge bg-label-danger me-1">Cancel</span>
+                        @elseif($result->status == 3)
+                        <span class="badge bg-label-success me-1">Approve</span>
+                        @elseif($result->status == 4)
+                        <span class="badge bg-label-warning me-1">Need corretion</span>
+                        @elseif($result->status == 5)
+                        <span class="badge bg-label-warning me-1">Reject</span>
+                      @endif
+                    </td>
+                    <th>
+                      @if($result->priority == 1)
+                        <span class="badge bg-label-success me-1">Normal</span>
+                        @elseif($result->priority == 2)
+                       <span class="badge bg-label-warning me-1">High</span>
+                       @elseif($result->priority == 3)
+                        <span class="badge bg-label-danger me-1">Urgent</span>
+                       @endif 
+                    </th>
+                    <td>{{ date('Y-m-d', strtotime($result->created_at)) }}</td>
+                    <td>
+                    <div class="d-flex align-items-center">
+                        
+                        @if(auth()->user()->hasRole(['admin', 'Buyer'])) 
+                        <div class="dropdown">
+                            <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                            <i class="bx bx-dots-vertical-rounded"></i>
+                            </button>
+                            <div class="dropdown-menu">
+                            <a class="dropdown-item" href="{{ route('tasks.edit',$result->id) }}"
+                                ><i class="bx bx-edit-alt me-1"></i> Edit</a
+                            >
+                            <a class="dropdown-item delete-item" onclick="deleteItem('{{$result->id}}','{{ url("/customer/".$result->id) }}')"  href="javascript:void(0)"><i class="bx bx-trash me-1"></i> Delete</a>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                    </td>
+                </tr>
+            @endforeach
+            @else
+              <tr >
+                <td colspan="5" style="text-align:center"><span > No Record found </span></td>
+              </tr>
+            @endif
+
+        </tbody>
+      </table>
+    </div>
+    <div class="row mx-2">
+      {!! $results->withQueryString()->links('pagination::bootstrap-5') !!}
+    </div>
+  </div>
+  <!--/ Basic Bootstrap Table -->
+@endsection
+@section('script')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.css" />
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
+@endsection
